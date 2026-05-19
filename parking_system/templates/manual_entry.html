@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quầy Dịch Vụ Khách Hàng - Smart Parking AI</title>
+    
+    <!-- Tích hợp Tailwind CSS qua CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome cho Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 min-h-screen flex flex-col">
+    
+    <!-- Header (Navbar) -->
+    <header class="glass-panel sticky top-0 z-50 shadow-sm border-b border-gray-200 dark:border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white shadow-lg">
+                        <i class="fa-solid fa-car-side"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-xl tracking-tight">Smart<span class="text-brand-600 dark:text-brand-500">Parking</span></h1>
+                    </div>
+                </div>
+
+                <nav class="hidden md:flex space-x-2">
+                    <a href="/" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition">
+                        <i class="fa-solid fa-video mr-1.5"></i> Live Map
+                    </a>
+                    {% if current_user.role == 'admin' %}
+                    <a href="/analytics" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition">
+                        <i class="fa-solid fa-chart-pie mr-1.5"></i> Analytics
+                    </a>
+                    {% endif %}
+                    <a href="/history" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition">
+                        <i class="fa-solid fa-clock-rotate-left mr-1.5"></i> History
+                    </a>
+                    <a href="/vehicles" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition">
+                        <i class="fa-solid fa-magnifying-glass mr-1.5"></i> Tìm Xe
+                    </a>
+                    <a href="/manual" class="px-4 py-2 rounded-lg bg-brand-50 text-brand-700 font-semibold dark:bg-brand-900/30 dark:text-brand-400">
+                        <i class="fa-solid fa-bell-concierge mr-1.5"></i> Quầy Dịch Vụ
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="flex items-center gap-1 md:gap-3">
+                <div class="hidden sm:flex items-center gap-2 mr-2 border-r border-gray-300 dark:border-gray-700 pr-3">
+                    <div class="text-sm font-medium">
+                        <span class="text-gray-500 dark:text-gray-400">Chào,</span> 
+                        <span class="text-brand-600 dark:text-brand-400 uppercase tracking-wide font-bold">{{ current_user.username }}</span>
+                    </div>
+                    <a href="/logout" title="Đăng xuất" class="ml-1 w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center dark:bg-red-900/30 dark:text-red-400 transition">
+                        <i class="fa-solid fa-power-off"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
+        
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Quầy Dịch Vụ Khách Hàng</h2>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Module xử lý trực tiếp dành cho thẻ Xe tháng, Mở Barrier thủ công và Khách đặt chỗ trực tuyến (Pre-Booking).</p>
+        </div>
+
+        <!-- System Alerts -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              {% if category == 'success' %}
+              <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm flex items-center gap-2 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400" role="alert">
+                  <i class="fa-solid fa-circle-check"></i> {{ message }}
+              </div>
+              {% else %}
+              <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm flex items-center gap-2 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400" role="alert">
+                  <i class="fa-solid fa-triangle-exclamation"></i> {{ message }}
+              </div>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- 1. Cụm Manual Entry (Sự cố / Xe tháng) -->
+            <div class="glass-panel rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center dark:bg-orange-900/30 dark:text-orange-400">
+                            <i class="fa-solid fa-keyboard"></i>
+                        </div>
+                        Giao Thức Điều Khiển Tay
+                    </h3>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Dùng trong trường hợp hệ thống Camera gặp sự cố hoặc cúp điện, bảo vệ mở tay để in hoá đơn.</p>
+                
+                <!-- Upload AI -->
+                <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                    <label class="block text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">
+                        <i class="fa-solid fa-robot mr-1"></i> Phân tích ảnh tĩnh (Dành cho ảnh chụp xe mô hình)
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="file" id="aiImageInput" accept="image/*" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
+                        <button type="button" onclick="analyzeImage()" id="analyzeBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2">
+                            <span>Đọc Ảnh</span>
+                        </button>
+                    </div>
+                    <div id="aiResultContainer" class="mt-3 hidden">
+                        <img id="aiPreview" class="w-full max-w-sm rounded-lg border border-gray-300 dark:border-gray-700 mx-auto" />
+                        <p id="aiError" class="text-xs text-red-600 mt-2 font-medium text-center hidden"></p>
+                    </div>
+                </div>
+
+                <script>
+                    function analyzeImage() {
+                        const fileInput = document.getElementById('aiImageInput');
+                        if (!fileInput.files || fileInput.files.length === 0) {
+                            alert("Vui lòng chọn ảnh trước!");
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        formData.append("image", fileInput.files[0]);
+
+                        const btn = document.getElementById('analyzeBtn');
+                        const originalHtml = btn.innerHTML;
+                        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đọc...';
+                        btn.disabled = true;
+
+                        fetch('/api/analyze_image', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            btn.innerHTML = originalHtml;
+                            btn.disabled = false;
+                            
+                            const container = document.getElementById('aiResultContainer');
+                            const preview = document.getElementById('aiPreview');
+                            const error = document.getElementById('aiError');
+                            container.classList.remove('hidden');
+
+                            if (data.error) {
+                                error.innerText = data.error;
+                                error.classList.remove('hidden');
+                                preview.classList.add('hidden');
+                            } else {
+                                error.classList.add('hidden');
+                                preview.src = data.image_base64;
+                                preview.classList.remove('hidden');
+                                
+                                // Điền vào form bên dưới
+                                document.querySelector('input[name="license_plate"]').value = data.plate_text;
+                            }
+                        })
+                        .catch(err => {
+                            btn.innerHTML = originalHtml;
+                            btn.disabled = false;
+                            alert("Có lỗi xảy ra: " + err);
+                        });
+                    }
+                </script>
+                
+                <form action="/api/manual_in_out" method="POST" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Xác nhận Đăng Ký Biển Số</label>
+                        <input type="text" name="license_plate" required placeholder="Ví dụ: 29A-999.99"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono uppercase focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                    </div>
+                    
+                    <div class="flex items-center gap-3 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-800">
+                        <input type="checkbox" name="is_monthly" id="is_monthly" class="w-5 h-5 text-brand-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        <label for="is_monthly" class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                            Xác thực Vé Cư Dân / Xe Tháng (Miễn Phí Thu Chuyến)
+                        </label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white rounded-xl font-bold text-sm shadow-md transition transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-bolt mr-1"></i> Xử Lý In Vé / Mở Barrier Chốt Chặn
+                    </button>
+                </form>
+            </div>
+
+            <!-- 2. Cụm Booking (Đặt chỗ) -->
+            <div class="glass-panel rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 relative overflow-hidden">
+                <!-- Watermark -->
+                <i class="fa-solid fa-mobile-button absolute -bottom-10 -right-10 text-9xl opacity-5 dark:opacity-10 text-brand-500"></i>
+                
+                <div class="flex items-center justify-between mb-6 relative z-10">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center dark:bg-indigo-900/30 dark:text-indigo-400">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        Khách Vãng Lai Đặt Chỗ
+                    </h3>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 relative z-10">Phòng vé trả trước theo gói. Camera cổng AI sẽ tự động mở rào chắn cho khách hàng. Nếu lố giờ sẽ phạt phụ thu lúc ra bãi.</p>
+                
+                <form action="/api/book_slot" method="POST" class="space-y-4 relative z-10">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Cung cấp Biển Số Xe</label>
+                        <input type="text" name="license_plate" required placeholder="Ví dụ: 51H-123.45"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono uppercase focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Tên khách hàng (Tùy chọn)</label>
+                            <input type="text" name="customer_name" placeholder="Nguyễn Văn A"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Gói Đỗ Xe</label>
+                            <select name="duration_package" id="duration_package" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition font-medium" onchange="updatePrice()">
+                                <option value="2|20000">Gói 2 Giờ (20K)</option>
+                                <option value="4|40000">Gói 4 Giờ (40K)</option>
+                                <option value="12|70000">Gói Nửa Ngày (70K)</option>
+                                <option value="24|120000">Gói Nguyên Ngày (120K)</option>
+                            </select>
+                            <input type="hidden" name="pre_fee" id="pre_fee" value="20000">
+                            <input type="hidden" name="duration_hours" id="duration_hours" value="2">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Số điện thoại (Tùy chọn)</label>
+                            <input type="text" name="customer_phone" placeholder="0987xxx"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">CCCD/CMND (Tùy chọn)</label>
+                            <input type="text" name="customer_cccd" placeholder="Nhập số thẻ..."
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white rounded-xl font-bold lg:text-lg shadow-md transition transform hover:-translate-y-0.5 mt-2 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-money-bill-wave"></i> <span id="payment_btn_text">Thu Vào Quỹ: 20.000 đ</span>
+                    </button>
+                    
+                    <div class="text-xs text-center text-rose-500 dark:text-rose-400 mt-4 flex items-center justify-center gap-2 font-medium">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Chú ý: Ra trễ hạn (Overstay) tự động kích hoạt phụ thu 10.000đ/Giờ
+                    </div>
+                </form>
+
+                <script>
+                    function updatePrice() {
+                        const val = document.getElementById('duration_package').value;
+                        const parts = val.split('|');
+                        const hours = parts[0];
+                        const price = parseInt(parts[1]);
+                        
+                        document.getElementById('duration_hours').value = hours;
+                        document.getElementById('pre_fee').value = price;
+                        
+                        document.getElementById('payment_btn_text').innerText = 'Thu Vào Quỹ: ' + price.toLocaleString('vi-VN') + ' đ';
+                    }
+                </script>
+            </div>
+        </div>
+        
+    </main>
+</body>
+</html>

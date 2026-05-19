@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Smart Parking AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 900: '#14532d' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .dark .glass-panel {
+            background: rgba(17, 24, 39, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .bg-animated {
+            background: linear-gradient(-45deg, #1e293b, #0f172a, #16a34a, #14532d);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body class="h-full flex items-center justify-center bg-gray-100 dark:bg-animated selection:bg-brand-500 selection:text-white transition-colors duration-300">
+    
+    <div class="w-full max-w-md p-8 glass-panel rounded-2xl shadow-2xl relative overflow-hidden m-4">
+        <!-- Ánh sáng hắt glow effect -->
+        <div class="absolute -top-20 -right-20 w-40 h-40 bg-brand-500 rounded-full mix-blend-multiply filter blur-2xl opacity-50 dark:opacity-30"></div>
+        <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-50 dark:opacity-30"></div>
+        
+        <div class="relative z-10">
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-green-700 shadow-lg mb-4 transform md:hover:scale-110 transition duration-300">
+                    <i class="fa-solid fa-shield-halved text-2xl text-white"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Smart Parking</h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Vui lòng rà soát danh tính để truy cập hệ thống</p>
+            </div>
+            
+            {% if error %}
+            <div class="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm flex items-center gap-3 animate-pulse">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Tài khoản hoặc mật khẩu không chính xác!</span>
+            </div>
+            {% endif %}
+
+            <form action="/login" method="POST" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tên đăng nhập</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user text-gray-400 group-focus-within:text-brand-500"></i>
+                        </div>
+                        <input type="text" id="username" name="username" required 
+                               class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition" 
+                               placeholder="admin hoặc guard">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mật khẩu bảo vệ</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-gray-400 group-focus-within:text-brand-500"></i>
+                        </div>
+                        <input type="password" id="password" name="password" required 
+                               class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition" 
+                               placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-600 dark:text-gray-400">
+                            Ghi nhớ 30 ngày
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-green-500 hover:from-brand-500 hover:to-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 focus:ring-offset-gray-900 transform transition-transform hover:-translate-y-0.5 active:translate-y-0">
+                    Xác Thực Truy Cập <i class="fa-solid fa-arrow-right-to-bracket ml-2 mt-0.5"></i>
+                </button>
+            </form>
+            
+            <div class="mt-8 text-center text-xs text-gray-500 dark:text-gray-500">
+                &copy; 2026 Parking AI System. Bãi đỗ được mã hóa cấp 2.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

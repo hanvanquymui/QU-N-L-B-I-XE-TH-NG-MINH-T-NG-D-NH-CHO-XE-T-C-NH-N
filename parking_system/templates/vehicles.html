@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking - Tìm Kiếm Xe</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300 min-h-screen flex flex-col">
+    
+    <!-- Header -->
+    <header class="glass-panel sticky top-0 z-50 shadow-sm border-b border-gray-200 dark:border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white shadow-lg">
+                        <i class="fa-solid fa-car-side"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-xl tracking-tight">Smart<span class="text-brand-600 dark:text-brand-500">Parking</span></h1>
+                    </div>
+                </div>
+
+                <nav class="hidden md:flex space-x-2">
+                    <a href="/" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition">
+                        <i class="fa-solid fa-video mr-1.5"></i> Live Map
+                    </a>
+                    {% if current_user.role == 'admin' %}
+                    <a href="/analytics" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition">
+                        <i class="fa-solid fa-chart-pie mr-1.5"></i> Analytics
+                    </a>
+                    {% endif %}
+                    <a href="/history" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition">
+                        <i class="fa-solid fa-clock-rotate-left mr-1.5"></i> History
+                    </a>
+                    <a href="/vehicles" class="px-4 py-2 rounded-lg bg-brand-50 text-brand-700 font-semibold dark:bg-brand-900/30 dark:text-brand-400">
+                        <i class="fa-solid fa-magnifying-glass mr-1.5"></i> Tìm Xe
+                    </a>
+                    <a href="/manual" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition">
+                        <i class="fa-solid fa-bell-concierge mr-1.5"></i> Quầy Dịch Vụ
+                    </a>
+                </nav>
+            </div>
+
+            <div class="flex items-center gap-1 md:gap-3">
+                <a href="/login" title="Trang chủ" class="hidden sm:flex ml-1 w-8 h-8 rounded-full bg-gray-50 text-gray-600 hover:bg-gray-200 flex items-center justify-center dark:bg-gray-800 dark:text-gray-400 transition">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+                <button id="theme-toggle" class="p-2.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none">
+                    <i id="theme-toggle-dark-icon" class="hidden font-bold text-xl fa-solid fa-moon text-gray-700 dark:text-gray-300"></i>
+                    <i id="theme-toggle-light-icon" class="hidden font-bold text-xl fa-solid fa-sun text-yellow-500"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl mx-auto px-4 py-12 w-full flex flex-col items-center">
+        <!-- Search Area -->
+        <div class="w-full text-center mb-8">
+            <h2 class="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-4">Tra Cứu Sinh Trắc Học Tốc Độ Cao</h2>
+            <p class="text-lg text-gray-500 dark:text-gray-400 mb-8 mt-2">Nhập phát có ngay - Không cần tìm kiếm thủ công mỏi mắt</p>
+            
+            <div class="relative max-w-2xl mx-auto">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass text-gray-400 text-xl"></i>
+                </div>
+                <input type="text" id="search-plate" autocomplete="off" autofocus
+                    class="block w-full pl-12 pr-4 py-4 text-xl font-mono text-gray-900 bg-white border border-gray-300 rounded-2xl shadow-lg focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white transition-all duration-300" 
+                    placeholder="VD: 30G-12345...">
+                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-keyboard text-gray-300 dark:text-gray-600"></i>
+                </div>
+            </div>
+            
+            <!-- Quick Filters -->
+            <div class="mt-5 flex flex-wrap justify-center gap-3">
+                <button id="filter-parking" class="filter-btn px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 dark:hover:bg-brand-900/30 dark:hover:text-brand-400 dark:hover:border-brand-700 shadow-sm transition-all duration-200" data-active="false">
+                    <i class="fa-solid fa-square-parking mr-1.5 opacity-70"></i> Đang Trong Bãi
+                </button>
+                <button id="filter-today" class="filter-btn px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 dark:hover:bg-brand-900/30 dark:hover:text-brand-400 dark:hover:border-brand-700 shadow-sm transition-all duration-200" data-active="false">
+                    <i class="fa-solid fa-calendar-day mr-1.5 opacity-70"></i> Xe Hôm Nay
+                </button>
+                <button id="filter-vip" class="filter-btn px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-300 dark:hover:bg-brand-900/30 dark:hover:text-brand-400 dark:hover:border-brand-700 shadow-sm transition-all duration-200" data-active="false">
+                    <i class="fa-solid fa-crown mr-1.5 opacity-70"></i> Xe Tháng (VIP)
+                </button>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="mt-8 text-center text-gray-400 dark:text-gray-500 flex flex-col items-center">
+            <div class="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 shadow-inner">
+                <i class="fa-solid fa-car-on text-5xl opacity-50"></i>
+            </div>
+            <p class="font-medium text-lg">Chưa có dữ liệu tìm kiếm</p>
+            <p class="text-sm">Gõ vài ký tự của biển số để hệ thống quét nhanh camera</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="mt-12 hidden">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto"></div>
+            <p class="text-center mt-4 text-gray-500">Đang lục tìm hồ sơ...</p>
+        </div>
+
+        <!-- Results Grid -->
+        <div id="results-container" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6 hidden">
+            <!-- Items will be injected here via JS -->
+        </div>
+
+    </main>
+
+    <!-- Image Modal -->
+    <div id="image-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 backdrop-blur-md transition-opacity duration-300 opacity-0" onclick="closeModal()">
+        <span class="absolute top-6 right-6 text-white text-5xl font-light cursor-pointer hover:text-gray-300 transition" onclick="closeModal()">&times;</span>
+        <img class="max-w-[95%] max-h-[90vh] object-contain rounded-xl shadow-2xl transition-transform duration-300 transform scale-95" id="modal-img" onclick="event.stopPropagation()">
+    </div>
+
+    <script>
+        // Theme Toggle Logic
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const darkIcon = document.getElementById('theme-toggle-dark-icon');
+        const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+        function getTheme() {
+            if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                return 'dark';
+            }
+            return 'light';
+        }
+
+        if (getTheme() === 'dark') { lightIcon.classList.remove('hidden'); } else { darkIcon.classList.remove('hidden'); }
+
+        themeToggleBtn.addEventListener('click', function() {
+            darkIcon.classList.toggle('hidden');
+            lightIcon.classList.toggle('hidden');
+
+            if (localStorage.getItem('color-theme')) {
+                if (localStorage.getItem('color-theme') === 'light') {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                }
+            } else {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                }
+            }
+        });
+
+        // Modal Logic cho phóng to ảnh
+        const modal = document.getElementById('image-modal');
+        const modalImg = document.getElementById('modal-img');
+
+        function openModal(imgSrc) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Timeout nhỏ để đảm bảo trigger được CSS transition
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalImg.classList.remove('scale-95');
+                modalImg.classList.add('scale-100');
+            }, 10);
+            modalImg.src = imgSrc;
+            document.body.style.overflow = 'hidden'; // Khóa cuộn trang
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalImg.classList.remove('scale-100');
+            modalImg.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto'; // Mở lại cuộn trang
+            }, 300);
+        }
+
+        // Search Logic
+        const searchInput = document.getElementById('search-plate');
+        const emptyState = document.getElementById('empty-state');
+        const loadingState = document.getElementById('loading-state');
+        const resultsContainer = document.getElementById('results-container');
+
+        let debounceTimer;
+        const filters = {
+            parking_only: false,
+            today_only: false,
+            vip_only: false
+        };
+
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const isActive = this.getAttribute('data-active') === 'true';
+                this.setAttribute('data-active', !isActive);
+                
+                if(!isActive) {
+                    this.classList.remove('bg-white', 'text-gray-600', 'border-gray-300', 'dark:bg-gray-800', 'dark:text-gray-400', 'dark:border-gray-700');
+                    this.classList.add('bg-brand-50', 'text-brand-600', 'border-brand-300', 'dark:bg-brand-900/40', 'dark:text-brand-300', 'dark:border-brand-600', 'ring-2', 'ring-brand-500/30');
+                } else {
+                    this.classList.remove('bg-brand-50', 'text-brand-600', 'border-brand-300', 'dark:bg-brand-900/40', 'dark:text-brand-300', 'dark:border-brand-600', 'ring-2', 'ring-brand-500/30');
+                    this.classList.add('bg-white', 'text-gray-600', 'border-gray-300', 'dark:bg-gray-800', 'dark:text-gray-400', 'dark:border-gray-700');
+                }
+
+                if(this.id === 'filter-parking') filters.parking_only = !isActive;
+                if(this.id === 'filter-today') filters.today_only = !isActive;
+                if(this.id === 'filter-vip') filters.vip_only = !isActive;
+
+                triggerSearch();
+            });
+        });
+
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => triggerSearch(), 300);
+        });
+
+        function triggerSearch() {
+            const query = searchInput.value.trim();
+            
+            if (query.length < 1) {
+                emptyState.classList.remove('hidden');
+                resultsContainer.classList.add('hidden');
+                loadingState.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+
+            const params = new URLSearchParams({
+                q: query,
+                parking_only: filters.parking_only,
+                today_only: filters.today_only,
+                vip_only: filters.vip_only
+            });
+
+            fetch(`/api/search_vehicles?${params.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    loadingState.classList.add('hidden');
+                    renderResults(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    loadingState.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    emptyState.querySelector('p.font-medium').innerText = "Đã xảy ra lỗi kết nối!";
+                });
+        }
+
+        function renderResults(data) {
+            resultsContainer.innerHTML = '';
+            
+            if (data.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.querySelector('p.font-medium').innerText = "Không tìm thấy xe nào!";
+                emptyState.querySelector('p.text-sm').innerText = searchInput.value;
+                return;
+            }
+
+            resultsContainer.classList.remove('hidden');
+
+            data.forEach(item => {
+                const cardBadgeColor = item.card_id && item.card_id.includes('Thẻ') 
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' 
+                                        : (item.card_id === 'Chưa cấp thẻ' 
+                                            ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400' 
+                                            : 'bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-300');
+                                            
+                // Sửa hiển thị Thẻ nếu trả về là '05' thay vì 'Thẻ 05'
+                let displayCard = item.card_id;
+                if(displayCard !== 'Chưa cấp thẻ' && !displayCard.startsWith('Thẻ')) {
+                    displayCard = 'Thẻ ' + displayCard;
+                }
+
+                const imageHtml = item.image_in 
+                    ? `<img src="${item.image_in}" class="w-full h-48 object-cover transition-transform duration-500 hover:scale-105 cursor-pointer" alt="Vehicle Image" onclick="openModal('${item.image_in}')" title="Nhấn để phóng to">`
+                    : `<div class="w-full h-48 bg-gray-200 dark:bg-gray-800 flex items-center justify-center"><i class="fa fa-car text-4xl text-gray-400"></i></div>`;
+
+                const html = `
+                    <div class="glass-panel rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col group">
+                        <div class="relative overflow-hidden">
+                            ${imageHtml}
+                            <div class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ${cardBadgeColor} shadow backdrop-blur-md bg-opacity-90">
+                                <i class="fa-solid fa-ticket mr-1"></i> ${displayCard}
+                            </div>
+                        </div>
+                        <div class="p-5 flex-grow flex flex-col">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-2xl font-mono border border-gray-200 dark:border-gray-700 font-bold text-gray-800 dark:text-white px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-inner inline-block">${item.license_plate}</h3>
+                            </div>
+                            
+                            <div class="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-sm">
+                                <span class="text-gray-500 dark:text-gray-400"><i class="fa-solid fa-clock mr-1"></i> ${item.time_in || 'N/A'}</span>
+                                <span class="font-medium text-brand-600 dark:text-brand-400">${item.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.insertAdjacentHTML('beforeend', html);
+            });
+        }
+    </script>
+</body>
+</html>
